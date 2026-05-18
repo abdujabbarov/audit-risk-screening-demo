@@ -2,6 +2,10 @@
 
 A companion demo for the talk **"Transformer-Based Risk Scoring: A Tool for Prioritizing Large Transaction Populations"** (Young Auditors Conference 2026, Tashkent).
 
+## Live demo
+
+**[Open interactive report](https://abdujabbarov.github.io/audit-risk-screening-demo/figures/report.html)** — click any transaction to see its details and SHAP feature attribution. No install required.
+
 ## What this is
 
 A working demonstration of how a modern AI model can rank transactions from most-suspicious to least-suspicious, so reviewers focus their attention on the cases most likely to matter. The pipeline uses a pretrained transformer (the same family as ChatGPT) to turn each transaction into a fingerprint, then a statistical method to identify the loners.
