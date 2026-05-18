@@ -102,7 +102,7 @@ def plot_ranked_top20(df_with_scores: pd.DataFrame, output_path: Path) -> None:
     ]
     ax.barh(y_positions, top["anomaly_score"], color=bar_colors, edgecolor="none")
 
-    labels = [f"#{r}  {tid}" for r, tid in zip(top["rank"], top["transaction_id"])]
+    labels = [f"#{r}  {_friendly_label(tid)}" for r, tid in zip(top["rank"], top["transaction_id"])]
     ax.set_yticks(y_positions)
     ax.set_yticklabels(labels, fontsize=9, color=COLORS["ink"])
     ax.set_xlabel("Anomaly score", color=COLORS["muted"])

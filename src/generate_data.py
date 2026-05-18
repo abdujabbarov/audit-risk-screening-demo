@@ -327,9 +327,9 @@ def write_dataset(output_path: Path, seed: int = RANDOM_SEED) -> pd.DataFrame:
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     new_csv = df.to_csv(index=False)
-    if output_path.exists() and output_path.read_text() == new_csv:
+    if output_path.exists() and output_path.read_text(encoding="utf-8", errors="replace") == new_csv:
         return df
-    output_path.write_text(new_csv)
+    output_path.write_text(new_csv, encoding="utf-8")
     return df
 
 
