@@ -12,6 +12,7 @@ from src.embed import compute_embeddings
 from src.explain import fit_attribution_model
 from src.generate_data import write_dataset
 from src.score import recall_at_k, score_transactions
+from src.report import build_interactive_report
 from src.visualize import (
     plot_attribution,
     plot_embedding_space,
@@ -33,7 +34,7 @@ def _step(idx: int, total: int, title: str) -> None:
 def main() -> None:
     """Run the full pipeline end-to-end with progress printed to stdout."""
     started = time.perf_counter()
-    total_steps = 5
+    total_steps = 6
 
     _step(1, total_steps, "Generating synthetic dataset...")
     df = write_dataset(DATA_CSV)
@@ -82,6 +83,11 @@ def main() -> None:
     print(f"      ✓ {fig3.relative_to(ROOT)}")
     plot_pipeline_diagram(fig4)
     print(f"      ✓ {fig4.relative_to(ROOT)}")
+
+    _step(6, total_steps, "Building interactive HTML report...")
+    report_path = FIGURES_DIR / "report.html"
+    build_interactive_report(scored, model, explainer, report_path)
+    print(f"      ✓ {report_path.relative_to(ROOT)}")
 
     elapsed = time.perf_counter() - started
     print(f"\nDone. Total runtime: {elapsed:.0f}s.")

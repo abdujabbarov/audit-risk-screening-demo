@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Audit Risk Screening</title>
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+         background: #F1F5F9; color: #0F172A; }
+  header { padding: 18px 32px; background: #0F172A; }
+  header h1 { font-size: 18px; font-weight: 700; color: #F8FAFC; letter-spacing: -.01em; }
+  header p  { font-size: 12px; color: #94A3B8; margin-top: 3px; }
+  .layout { display: flex; gap: 16px; padding: 20px 32px; align-items: flex-start; }
+  .panel  { background: white; border-radius: 10px; padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+  .left  { flex: 0 0 400px; }
+  .right { flex: 1; min-height: 200px; }
+  .hint  { color: #94A3B8; font-size: 13px; text-align: center; padding: 60px 0; }
+  .tx-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .tx-id   { font-size: 16px; font-weight: 700; color: #0F172A; }
+  .tx-badge { background: #FEF2F2; color: #DC2626; border-radius: 20px;
+              padding: 3px 10px; font-size: 11px; font-weight: 600; }
+  .meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+  .meta-item { background: #F8FAFC; border-radius: 6px; padding: 8px 12px;
+               border: 1px solid #E2E8F0; }
+  .meta-label { font-size: 10px; text-transform: uppercase; letter-spacing: .06em;
+                color: #94A3B8; }
+  .meta-value { font-size: 13px; font-weight: 500; color: #0F172A;
+                margin-top: 2px; word-break: break-word; }
+  .desc-box { background: #F8FAFC; border-radius: 6px; padding: 10px 12px;
+              border: 1px solid #E2E8F0; font-size: 12px; color: #475569;
+              line-height: 1.55; margin-bottom: 16px; }
+  .section-title { font-size: 12px; font-weight: 600; text-transform: uppercase;
+                   letter-spacing: .06em; color: #64748B; margin-bottom: 8px; }
+  .legend { display: flex; gap: 16px; justify-content: flex-end;
+            font-size: 11px; color: #64748B; margin-top: 6px; }
+  .legend-dot { display: inline-block; width: 10px; height: 10px;
+                border-radius: 2px; margin-right: 4px; vertical-align: middle; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Audit Risk Screening &#8212; Top 20 Review</h1>
+  <p>Click any bar to inspect transaction details and feature contributions.</p>
+</header>
+<div class="layout">
+  <div class="panel left">
+    <div id="bar-chart"></div>
+    <div class="legend">
+      <span><span class="legend-dot" style="background:#DC2626"></span>Planted irregularity</span>
+      <span><span class="legend-dot" style="background:#0369A1"></span>Unplanted</span>
+    </div>
+  </div>
+  <div class="panel right" id="right-panel">
+    <p class="hint">&#8592; Select a transaction to inspect it</p>
+  </div>
+</div>
+
+<script>
+const RECORDS = [{"transaction_id": "T-01006", "rank": 1, "anomaly_score": 1.0, "is_planted": true, "fields": {"vendor": "Beacon Services", "category": "Construction", "amount": 98300.0, "date": "2025-02-01", "method": "Single-source", "ministry": "Ministry of Digital Affairs", "description": "advisory services — phase B"}, "shap": {"amount_log": 0.11075, "amount_to_threshold_ratio": -0.22718, "is_single_source": 2.44421, "is_end_of_period": -0.08341, "vendor_history_count": 3.81006, "vendor_is_new": 0.0, "category_method_consistency": 2.31218}}, {"transaction_id": "T-01009", "rank": 2, "anomaly_score": 0.9548, "is_planted": true, "fields": {"vendor": "Beacon Services", "category": "Construction", "amount": 98700.0, "date": "2024-12-01", "method": "Single-source", "ministry": "Ministry of Transport", "description": "advisory services — phase B"}, "shap": {"amount_log": 0.11105, "amount_to_threshold_ratio": -0.22854, "is_single_source": 2.44421, "is_end_of_period": -0.08341, "vendor_history_count": 3.81006, "vendor_is_new": 0.0, "category_method_consistency": 2.31218}}, {"transaction_id": "T-04001", "rank": 3, "anomaly_score": 0.9046, "is_planted": true, "fields": {"vendor": "NewVendor LLC", "category": "Construction", "amount": 131500.0, "date": "2025-12-24", "method": "Single-source", "ministry": "Ministry of Public Works", "description": "facilities works — year-end programme"}, "shap": {"amount_log": 0.13219, "amount_to_threshold_ratio": -0.34019, "is_single_source": 2.44421, "is_end_of_period": 0.31378, "vendor_history_count": 3.41743, "vendor_is_new": 0.0, "category_method_consistency": 2.31218}}, {"transaction_id": "T-04005", "rank": 4, "anomaly_score": 0.8981, "is_planted": true, "fields": {"vendor": "NewVendor LLC", "category": "Construction", "amount": 127500.0, "date": "2025-12-24", "method": "Single-source", "ministry": "Ministry of Public Works", "description": "facilities works — year-end programme"}, "shap": {"amount_log": 0.12991, "amount_to_threshold_ratio": -0.32658, "is_single_source": 2.44421, "is_end_of_period": 0.31378, "vendor_history_count": 3.41743, "vendor_is_new": 0.0, "category_method_consistency": 2.31218}}, {"transaction_id": "T-04006", "rank": 5, "anomaly_score": 0.8981, "is_planted": true, "fields": {"vendor": "NewVendor LLC", "category": "Construction", "amount": 134800.0, "date": "2025-12-30", "method": "Single-source", "ministry": "Ministry of Public Works", "description": "facilities works — year-end programme"}, "shap": {"amount_log": 0.13401, "amount_to_threshold_ratio": -0.35143, "is_single_source": 2.44421, "is_end_of_period": 0.31378, "vendor_history_count": 3.41743, "vendor_is_new": 0.0, "category_method_consistency": 2.31218}}, {"transaction_id": "T-04008", "rank": 6, "anomaly_score": 0.8868, "is_planted": true, "fields": {"vendor": "NewVendor LLC", "category": "Construction", "amount": 104200.0, "date": "2025-12-02", "method": "Single-source", "ministry": "Ministry of Public Works", "description": "facilities works — year-end programme"}, "shap": {"amount_log": 0.11504, "amount_to_threshold_ratio": -0.24726, "is_single_source": 2.44421, "is_end_of_period": -0.08341, "vendor_history_count": 3.41743, "vendor_is_new": 0.0, "category_method_consistency": 2.31218}}, {"transaction_id": "T-04002", "rank": 7, "anomaly_score": 0.8837, "is_planted": true, "fields": {"vendor": "NewVendor LLC", "category": "Construction", "amount": 88500.0, "date": "2025-12-12", "method": "Single-source", "ministry": "Ministry of Public Works", "description": "facilities works — year-end programme"}, "shap": {"amount_log": 0.10301, "amount_to_threshold_ratio": -0.19382, "is_single_source": 2.44421, "is_end_of_period": -0.08341, "vendor_history_count": 3.41743, "vendor_is_new": 0.0, "category_method_consistency": 2.31218}}, {"transaction_id": "T-04003", "rank": 8, "anomaly_score": 0.8837, "is_planted": true, "fields": {"vendor": "NewVendor LLC", "category": "Construction", "amount": 133500.0, "date": "2025-12-06", "method": "Single-source", "ministry": "Ministry of Public Works", "description": "facilities works — year-end programme"}, "shap": {"amount_log": 0.1333, "amount_to_threshold_ratio": -0.347, "is_single_source": 2.44421, "is_end_of_period": -0.08341, "vendor_history_count": 3.41743, "vendor_is_new": 0.0, "category_method_consistency": 2.31218}}, {"transaction_id": "T-04007", "rank": 9, "anomaly_score": 0.8837, "is_planted": true, "fields": {"vendor": "NewVendor LLC", "category": "Construction", "amount": 102200.0, "date": "2025-12-17", "method": "Single-source", "ministry": "Ministry of Public Works", "description": "facilities works — year-end programme"}, "shap": {"amount_log": 0.11361, "amount_to_threshold_ratio": -0.24046, "is_single_source": 2.44421, "is_end_of_period": -0.08341, "vendor_history_count": 3.41743, "vendor_is_new": 0.0, "category_method_consistency": 2.31218}}, {"transaction_id": "T-01003", "rank": 10, "anomaly_score": 0.8836, "is_planted": true, "fields": {"vendor": "Beacon Services", "category": "IT services", "amount": 99400.0, "date": "2025-12-16", "method": "Single-source", "ministry": "Ministry of Transport", "description": "advisory services — phase B"}, "shap": {"amount_log": 0.11157, "amount_to_threshold_ratio": -0.23092, "is_single_source": 2.44421, "is_end_of_period": -0.08341, "vendor_history_count": 3.81006, "vendor_is_new": 0.0, "category_method_consistency": 2.31218}}, {"transaction_id": "C004", "rank": 11, "anomaly_score": 0.8803, "is_planted": true, "fields": {"vendor": "NewVendor LLC", "category": "Construction", "amount": 99500.0, "date": "2025-12-04", "method": "Single-source", "ministry": "Ministry of Public Works", "description": "facilities works — year-end programme"}, "shap": {"amount_log": 0.11164, "amount_to_threshold_ratio": -0.23126, "is_single_source": 2.44421, "is_end_of_period": -0.08341, "vendor_history_count": 3.41743, "vendor_is_new": 0.0, "category_method_consistency": 2.31218}}, {"transaction_id": "T-03082", "rank": 12, "anomaly_score": 0.8481, "is_planted": false, "fields": {"vendor": "Drift Transport", "category": "Transport", "amount": 5800.0, "date": "2025-12-22", "method": "Simplified", "ministry": "Ministry of Education", "description": "fuel supply — phase 1"}, "shap": {"amount_log": -0.09775, "amount_to_threshold_ratio": 0.08769, "is_single_source": 0.0, "is_end_of_period": 0.31378, "vendor_history_count": -0.03769, "vendor_is_new": 0.0, "category_method_consistency": -0.0}}, {"transaction_id": "T-09004", "rank": 13, "anomaly_score": 0.8441, "is_planted": true, "fields": {"vendor": "Omnibus Holdings", "category": "Construction", "amount": 125000.0, "date": "2025-11-18", "method": "Single-source", "ministry": "Ministry of Digital Affairs", "description": "renovation services"}, "shap": {"amount_log": 0.12845, "amount_to_threshold_ratio": -0.31807, "is_single_source": 2.44421, "is_end_of_period": -0.08341, "vendor_history_count": 3.65301, "vendor_is_new": 0.0, "category_method_consistency": 2.31218}}, {"transaction_id": "T-01010", "rank": 14, "anomaly_score": 0.8403, "is_planted": true, "fields": {"vendor": "Pinnacle Contracting", "category": "Consulting", "amount": 99200.0, "date": "2025-09-23", "method": "Single-source", "ministry": "Ministry of Public Works", "description": "advisory services — phase B"}, "shap": {"amount_log": 0.11142, "amount_to_threshold_ratio": -0.23024, "is_single_source": 2.44421, "is_end_of_period": 0.31378, "vendor_history_count": 3.73154, "vendor_is_new": 0.0, "category_method_consistency": 2.31218}}, {"transaction_id": "T-01007", "rank": 15, "anomaly_score": 0.8287, "is_planted": true, "fields": {"vendor": "Pinnacle Contracting", "category": "Consulting", "amount": 99000.0, "date": "2025-04-22", "method": "Single-source", "ministry": "Ministry of Health", "description": "advisory services — phase B"}, "shap": {"amount_log": 0.11127, "amount_to_threshold_ratio": -0.22956, "is_single_source": 2.44421, "is_end_of_period": -0.08341, "vendor_history_count": 3.73154, "vendor_is_new": 0.0, "category_method_consistency": 2.31218}}, {"transaction_id": "T-01001", "rank": 16, "anomaly_score": 0.8258, "is_planted": true, "fields": {"vendor": "Pinnacle Contracting", "category": "IT services", "amount": 99300.0, "date": "2024-03-21", "method": "Single-source", "ministry": "Ministry of Health", "description": "advisory services — phase B"}, "shap": {"amount_log": 0.11149, "amount_to_threshold_ratio": -0.23058, "is_single_source": 2.44421, "is_end_of_period": 0.31378, "vendor_history_count": 3.73154, "vendor_is_new": 0.0, "category_method_consistency": 2.31218}}, {"transaction_id": "T-09002", "rank": 17, "anomaly_score": 0.8214, "is_planted": true, "fields": {"vendor": "Omnibus Holdings", "category": "Consulting", "amount": 75000.0, "date": "2025-11-16", "method": "Single-source", "ministry": "Ministry of Digital Affairs", "description": "advisory engagement"}, "shap": {"amount_log": 0.09082, "amount_to_threshold_ratio": -0.14787, "is_single_source": 2.44421, "is_end_of_period": -0.08341, "vendor_history_count": 3.65301, "vendor_is_new": 0.0, "category_method_consistency": 2.31218}}, {"transaction_id": "T-09003", "rank": 18, "anomaly_score": 0.8143, "is_planted": true, "fields": {"vendor": "Omnibus Holdings", "category": "Medical equipment", "amount": 100000.0, "date": "2025-11-17", "method": "Single-source", "ministry": "Ministry of Digital Affairs", "description": "diagnostic equipment lot"}, "shap": {"amount_log": 0.11201, "amount_to_threshold_ratio": -0.23297, "is_single_source": 2.44421, "is_end_of_period": -0.08341, "vendor_history_count": 3.65301, "vendor_is_new": 0.0, "category_method_consistency": 2.31218}}, {"transaction_id": "T-01004", "rank": 19, "anomaly_score": 0.8132, "is_planted": true, "fields": {"vendor": "Pinnacle Contracting", "category": "Consulting", "amount": 98900.0, "date": "2024-08-05", "method": "Single-source", "ministry": "Ministry of Public Works", "description": "advisory services — phase B"}, "shap": {"amount_log": 0.1112, "amount_to_threshold_ratio": -0.22922, "is_single_source": 2.44421, "is_end_of_period": -0.08341, "vendor_history_count": 3.73154, "vendor_is_new": 0.0, "category_method_consistency": 2.31218}}, {"transaction_id": "T-09350", "rank": 20, "anomaly_score": 0.8059, "is_planted": false, "fields": {"vendor": "Trident Works", "category": "Construction", "amount": 148000.0, "date": "2025-10-17", "method": "Single-source", "ministry": "Ministry of Transport", "description": "facade works — framework lot B"}, "shap": {"amount_log": 0.14089, "amount_to_threshold_ratio": -0.39636, "is_single_source": 2.44421, "is_end_of_period": -0.08341, "vendor_history_count": -0.50885, "vendor_is_new": 0.0, "category_method_consistency": 2.31218}}];
+
+const labels = RECORDS.map(r => "#" + r.rank + "  " + r.transaction_id);
+const scores = RECORDS.map(r => r.anomaly_score);
+const colors = RECORDS.map(r => r.is_planted ? "#DC2626" : "#0369A1");
+
+const barTrace = {
+  type: "bar", orientation: "h",
+  x: scores,
+  y: labels,
+  marker: { color: colors, opacity: 0.85 },
+  hovertemplate: "<b>%{y}</b><br>Score: %{x:.4f}<extra></extra>",
+};
+
+const barLayout = {
+  title: { text: "Top 20 flagged transactions", font: { size: 13, color: "#0F172A" } },
+  margin: { l: 120, r: 16, t: 38, b: 40 },
+  xaxis: { title: { text: "Anomaly score", font: { size: 11 } }, range: [0, 1.05],
+           tickfont: { size: 10 } },
+  yaxis: { automargin: true, tickfont: { size: 10 } },
+  paper_bgcolor: "white", plot_bgcolor: "white",
+  showlegend: false,
+  height: 500,
+};
+
+const barDiv = document.getElementById("bar-chart");
+Plotly.newPlot(barDiv, [barTrace], barLayout, { displayModeBar: false, responsive: true });
+
+let selectedIdx = null;
+
+barDiv.on("plotly_click", function(ev) {
+  const idx = ev.points[0].pointIndex;
+  selectedIdx = idx;
+
+  // Highlight selected bar
+  const updated = RECORDS.map((r, i) => i === idx ? "#F59E0B" : (r.is_planted ? "#DC2626" : "#0369A1"));
+  Plotly.restyle(barDiv, { "marker.color": [updated] }, [0]);
+
+  renderDetail(RECORDS[idx]);
+});
+
+function fmt(val) {
+  if (typeof val === "number") return val.toLocaleString("en-US", { maximumFractionDigits: 0 });
+  return val || "&#8212;";
+}
+
+function renderDetail(rec) {
+  const f = rec.fields;
+  const panel = document.getElementById("right-panel");
+
+  const meta = [
+    ["Rank",        "#" + rec.rank],
+    ["Anomaly score", rec.anomaly_score.toFixed(4)],
+    ["Vendor",      f.vendor],
+    ["Ministry",    f.ministry],
+    ["Category",    f.category],
+    ["Amount",      "$ " + fmt(f.amount)],
+    ["Date",        f.date],
+    ["Method",      f.method],
+  ];
+
+  const metaHtml = meta.map(([label, value]) =>
+    `<div class="meta-item"><div class="meta-label">${label}</div>` +
+    `<div class="meta-value">${value}</div></div>`
+  ).join("");
+
+  panel.innerHTML =
+    `<div class="tx-header">` +
+      `<span class="tx-id">${rec.transaction_id}</span>` +
+      `<span class="tx-badge">Score: ${rec.anomaly_score.toFixed(4)}</span>` +
+    `</div>` +
+    `<div class="section-title">Transaction details</div>` +
+    `<div class="meta-grid">${metaHtml}</div>` +
+    `<div class="desc-box">${f.description || "&#8212;"}</div>` +
+    `<div class="section-title">Why was this flagged?</div>` +
+    `<div id="shap-chart"></div>`;
+
+  const shap = rec.shap;
+  const sorted = Object.entries(shap).sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]));
+  const names  = sorted.map(d => d[0]).reverse();
+  const values = sorted.map(d => d[1]).reverse();
+  const barColors = values.map(v => v > 0 ? "#DC2626" : "#64748B");
+
+  Plotly.newPlot("shap-chart", [{
+    type: "bar", orientation: "h",
+    x: values, y: names,
+    marker: { color: barColors, opacity: 0.85 },
+    hovertemplate: "%{y}: %{x:.5f}<extra></extra>",
+  }], {
+    margin: { l: 210, r: 16, t: 10, b: 40 },
+    xaxis: { title: { text: "SHAP value (contribution to anomaly score)", font: { size: 11 } },
+             zeroline: true, zerolinecolor: "#CBD5E1", zerolinewidth: 1.5,
+             tickfont: { size: 10 } },
+    yaxis: { automargin: true, tickfont: { size: 11 } },
+    paper_bgcolor: "white", plot_bgcolor: "white",
+    showlegend: false,
+    height: 260,
+  }, { displayModeBar: false, responsive: true });
+}
+</script>
+</body>
+</html>
