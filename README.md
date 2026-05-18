@@ -12,6 +12,7 @@ In plain terms, the demo:
 2. Turns every transaction into a numeric fingerprint by combining a transformer reading of its text columns with its numeric attributes.
 3. Asks an Isolation Forest which fingerprints look most unlike the rest, and orders them from most to least suspicious.
 4. For the top-ranked cases, explains *why* they were flagged using SHAP attribution over plain-English features (amount, vendor history, procurement method, and so on).
+5. Packages the ranked list and all explanations into a self-contained interactive HTML report — no server or Python install needed to review it.
 
 ## What this is NOT
 
@@ -19,7 +20,7 @@ This is not production audit software. It runs on synthetic data with planted ir
 
 ## Requirements
 
-- Python 3.10 or 3.11
+- Python 3.10, 3.11, or 3.12
 - About 200 MB free disk (the transformer model weighs ~80 MB and is downloaded on first run)
 - An internet connection on first run only (subsequent runs work offline)
 
@@ -33,7 +34,7 @@ python run_demo.py
 jupyter notebook notebook.ipynb
 ```
 
-`run_demo.py` regenerates the dataset, computes embeddings, scores anomalies, runs the attribution, and writes four figures into `figures/`. Total runtime is roughly 1–2 minutes on a standard laptop, CPU only — no GPU required.
+`run_demo.py` regenerates the dataset, computes embeddings, scores anomalies, runs the attribution, writes four figures into `figures/`, and produces an interactive HTML report at `figures/report.html`. Total runtime is roughly 1–2 minutes on a standard laptop, CPU only — no GPU required.
 
 The notebook walks through the same pipeline with explanations between the steps.
 
@@ -45,6 +46,7 @@ After `python run_demo.py` finishes, look in `figures/`:
 - **`02_ranked_top20.png`** — the 20 most-suspicious transactions, ranked. Bars in red are the planted irregularities — these are the ones a reviewer would want to inspect first.
 - **`03_attribution_C004.png`** — for the highlighted transaction C004, the SHAP chart shows which features pushed it up the ranking (amount close to the 100,000 threshold, single-source method, brand-new vendor).
 - **`04_pipeline_diagram.png`** — the five-stage flow: raw data → transformer → forest → attribute → review.
+- **`report.html`** — interactive review tool. Open in any browser: click a bar in the top-20 chart to see that transaction's details and SHAP explanation side by side. Self-contained — no server or Python needed.
 
 ## Repository layout
 
@@ -62,7 +64,8 @@ audit-risk-screening-demo/
 │   ├── embed.py                    # transformer + numeric features
 │   ├── score.py                    # Isolation Forest
 │   ├── explain.py                  # SHAP attribution
-│   └── visualize.py                # the four figures
+│   ├── visualize.py                # the four static figures
+│   └── report.py                   # interactive HTML report
 └── tests/                          # pytest suite (run with `pytest tests/`)
 ```
 
