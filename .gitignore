@@ -23,8 +23,9 @@ ENV/
 .mypy_cache/
 .ruff_cache/
 
-# Generated embeddings cache (regenerated automatically)
-data/embeddings.npy
+# Data files (local only, not tracked in repo)
+data/
+
 
 # OS
 .DS_Store
